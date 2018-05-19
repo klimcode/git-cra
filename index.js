@@ -1,5 +1,65 @@
 #!/usr/bin/env node
 
+const PATH = require('path');
+const FILE = require('fs-handy-wraps');
+const SHELL = require('shelljs');
+const CLI = require('inquirer');
+const BRIEF = require('brief-async');
+const { LOG, ERR } = require('./helpers');
+
+const { HOME, CWD } = FILE;
+const HOMEDIR = PATH.join(HOME, 'npfe');
+const CONFIG_FILE = PATH.join(HOMEDIR, 'config.json');
+
+const ARGS = process.argv.slice(2);
+// const [PROJECT_NAME] = ARGS;
+const PROJECT_NAME = 'new-test-project';
+const PROJECT_PATH = PATH.join(CWD, PROJECT_NAME);
+
+
+const getConfig = (args, resolve) => {
+  const [configPath] = args;
+  const getDefaultConfig = () => {
+    LOG(`Default config created here ${configPath}`);
+    return FILE.read('default-config.json');
+  };
+
+  FILE.getConfig(configPath, getDefaultConfig, null, resolve);
+};
+const preparations = (args, resolve) => {
+  // const [config] = args;
+
+  // Test 1: is git installed?
+  if (!SHELL.which('git')) {
+    ERR('Error: git is not found');
+    SHELL.exit(1);
+  }
+
+  // Test 2: destination folder exist. Remove it?
+  LOG(PROJECT_PATH);
+  if (SHELL.test('-e', PROJECT_PATH)) {
+    const questions = [{
+      type: 'confirm',
+      name: 'toClear',
+      message: `The directory ${PROJECT_PATH} is existed already. Clear it?`,
+    }];
+    CLI.prompt(questions).then((answers) => {
+      if (answers.toClear) SHELL.rm('-rf', PROJECT_PATH);
+    });
+  }
+};
+
+const roadmap = [
+  [CONFIG_FILE],  getConfig,
+  [getConfig],    preparations,
+  // [readConfig],                 makeThings,
+];
+BRIEF(roadmap);
+
+
+/*
+
+
 if (process.argv.length < 4) {
   console.log('Please provide an app name and a ZIP with the template');
   console.log('e.g.');
@@ -179,10 +239,11 @@ function done() {
 
   const postcraft = path.resolve(appDir, 'postcraft.txt');
   fs.readFile(postcraft, 'utf-8', (err, contents) => {
-    if (err) {/* whatever */}
+    if (err) {}
     console.log('\nAnd a word from your template creator...');
     console.log(contents);
     fs.remove(postcraft);
   });
 
 }
+*/
