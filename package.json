@@ -1,10 +1,8 @@
 {
-  "name": "git-cra",
+  "name": "npfe",
   "version": "0.1.0",
   "description": "xxxxx",
-  "scripts": {
-    "i": "yarn add -D eslint eslint-config-airbnb eslint-plugin-import eslint-plugin-jsx-a11y eslint-plugin-react babel-eslint"
-  },
+  "scripts": {},
   "dependencies": {
     "brief-async": "^0.5.0",
     "fs-handy-wraps": "^4.2.0",

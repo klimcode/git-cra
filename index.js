@@ -44,7 +44,7 @@ const preparations = (args, resolve) => {
     SHELL.exit(0);
   }
 
-  // Test 3: destination folder exists. Remove it?
+  // Test 3: destination folder existing
   if (SHELL.test('-e', PROJECT_PATH)) {
     const questions = [{
       message: `The directory ${PROJECT_PATH} is existed already. Clear it?`,
@@ -55,6 +55,8 @@ const preparations = (args, resolve) => {
       if (answers.toClear) {
         SHELL.rm('-rf', PROJECT_PATH);
         resolve(config);
+      } else {
+        SHELL.exit(0);
       }
     });
   } else {
@@ -82,16 +84,24 @@ const getSourceUrl = (args, resolve) => {
     } else {
       ERR(`Unknown alias ${sourceAlias}`);
       const firstSource = sources[0];
-      const questions = [{
-        message: `Use the first alias? (${firstSource.alias})`,
-        type: 'confirm',
-        name: 'useDefault',
-      }];
-      CLI.prompt(questions).then((answers) => {
-        if (answers.useDefault) {
-          resolve(firstSource.url);
-        }
-      });
+
+      if (config.firstForced) {
+        LOG(`Using the first source (${firstSource.alias}: ${firstSource.url}) ...`);
+        resolve(firstSource.url);
+      } else {
+        const questions = [{
+          message: `Use the first alias? (${firstSource.alias}: ${firstSource.url})`,
+          type: 'confirm',
+          name: 'useDefault',
+        }];
+        CLI.prompt(questions).then((answers) => {
+          if (answers.useDefault) {
+            resolve(firstSource.url);
+          } else {
+            SHELL.exit(0);
+          }
+        });
+      }
     }
   } else if (knownSource) {
     LOG(`This URI had been used already. You may specify only alias ${sourceAlias} instead`);
