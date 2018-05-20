@@ -60,3 +60,10 @@ If `<new-alias>` is not spesicied then a placeholder `source_#` will be used as 
 ## package.json
 
 All occurrences of the source project's name will be replaced by the new project's name in the `package.json` file.
+
+.
+
+## Examples of a Source Project
+
+1. https://github.com/klimcode/base.git -- an empty project with `ESLint` configured, filled `package.json` and a mock of `readme.md`
+2. https://github.com/klimcode/base-cra.git -- a `create-react-app` based boilerplate is under active development
