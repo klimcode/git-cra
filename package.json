@@ -1,7 +1,7 @@
 {
   "name": "npfe",
   "version": "0.1.0",
-  "description": "xxxxx",
+  "description": "New Project From Existing git-repo",
   "scripts": {},
   "dependencies": {
     "brief-async": "^0.5.0",
@@ -19,6 +19,11 @@
     "eslint-plugin-jsx-a11y": "^6.0.3",
     "eslint-plugin-react": "^7.8.2"
   },
+  "keywords": [
+    "git",
+    "scaffolding",
+    "management"
+  ],
   "author": "John Klimov",
   "license": "MIT",
   "repository": {

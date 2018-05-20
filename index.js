@@ -75,7 +75,7 @@ const getSourceUrl = (args, resolve) => {
   const [config, sourceArgv, sourceAlias] = args;
   const { sources } = config;
 
-  const isAlias = sourceArgv.search('/') === -1;
+  const isAlias = sourceArgv.search('.') === -1;
   const knownSource = sources.find(base =>
     (isAlias && (base.alias === sourceArgv)) ||
     (base.url === sourceArgv));
@@ -90,7 +90,7 @@ const getSourceUrl = (args, resolve) => {
       LOG(CH`{cyanBright Source Project's URI is:} ${sourceUrl}`);
       resolve(sourceUrl);
     } else {
-      LOG(CH`{yellow Unknown alias:} ${sourceAlias}`);
+      LOG(CH`{yellow Unknown alias:} ${sourceArgv}`);
       const firstSource = sources[0];
 
       if (config.firstForced) {
