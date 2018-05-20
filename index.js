@@ -4,7 +4,8 @@ const PATH = require('path');
 const FILE = require('fs-handy-wraps');
 const SHELL = require('shelljs');
 const CLI = require('inquirer');
-const BRIEF = require('brief-async');
+const OPN = require('opn');
+const TRIP = require('brief-async');
 const { LOG, ERR } = require('./helpers');
 
 const { HOME, CWD } = FILE;
@@ -12,9 +13,10 @@ const HOMEDIR = PATH.join(HOME, 'npfe');
 const CONFIG_FILE = PATH.join(HOMEDIR, 'config.json');
 
 const ARGS = process.argv.slice(2);
-// const [PROJECT_NAME] = ARGS;
-const PROJECT_NAME = 'new-test-project';
+const PROJECT_NAME = ARGS[0] || '';
 const PROJECT_PATH = PATH.join(CWD, PROJECT_NAME);
+const SOURCE_URL = ARGS[1] || '';
+const SOURCE_ALIAS = ARGS[2] || '';
 
 
 const getConfig = (args, resolve) => {
@@ -27,7 +29,7 @@ const getConfig = (args, resolve) => {
   FILE.getConfig(configPath, getDefaultConfig, null, resolve);
 };
 const preparations = (args, resolve) => {
-  // const [config] = args;
+  const [config] = args;
 
   // Test 1: is git installed?
   if (!SHELL.which('git')) {
@@ -35,26 +37,89 @@ const preparations = (args, resolve) => {
     SHELL.exit(1);
   }
 
-  // Test 2: destination folder exist. Remove it?
-  LOG(PROJECT_PATH);
+  // Test 2: is Project name specified?
+  if (!PROJECT_NAME) {
+    LOG('Config editing mode...');
+    OPN(CONFIG_FILE);
+    SHELL.exit(0);
+  }
+
+  // Test 3: destination folder exists. Remove it?
   if (SHELL.test('-e', PROJECT_PATH)) {
     const questions = [{
+      message: `The directory ${PROJECT_PATH} is existed already. Clear it?`,
       type: 'confirm',
       name: 'toClear',
-      message: `The directory ${PROJECT_PATH} is existed already. Clear it?`,
     }];
     CLI.prompt(questions).then((answers) => {
-      if (answers.toClear) SHELL.rm('-rf', PROJECT_PATH);
+      if (answers.toClear) {
+        SHELL.rm('-rf', PROJECT_PATH);
+        resolve(config);
+      }
     });
+  } else {
+    resolve(config);
   }
+};
+const getSourceUrl = (args, resolve) => {
+  const [config, sourceArgv, sourceAlias] = args;
+  const { sources } = config;
+
+  const isAlias = sourceArgv.search('/') === -1;
+  const knownSource = sources.find(base =>
+    (isAlias && (base.alias === sourceArgv)) ||
+    (base.url === sourceArgv));
+  const sourceUrl = isAlias
+    ? knownSource && knownSource.url
+    : sourceArgv;
+
+
+  // debugger;
+  if (isAlias) {
+    if (knownSource) {
+      LOG(`Source Project's URI is ${sourceUrl}`);
+      resolve(sourceUrl);
+    } else {
+      ERR(`Unknown alias ${sourceAlias}`);
+      const firstSource = sources[0];
+      const questions = [{
+        message: `Use the first alias? (${firstSource.alias})`,
+        type: 'confirm',
+        name: 'useDefault',
+      }];
+      CLI.prompt(questions).then((answers) => {
+        if (answers.useDefault) {
+          resolve(firstSource.url);
+        }
+      });
+    }
+  } else if (knownSource) {
+    LOG(`This URI had been used already. You may specify only alias ${sourceAlias} instead`);
+    resolve(sourceUrl);
+  } else {
+    // The new alias will be added to the config. Mutation!
+    const aliasBase = sourceAlias || 'source_';
+    const alias = sourceAlias || `${aliasBase}${config.sources.length}`;
+    config.sources.push({ alias, url: sourceUrl });
+    FILE.write(CONFIG_FILE, JSON.stringify(config, null, 2));
+    LOG(`New alias ${alias} is added to the config`);
+  }
+};
+const cloneSourceProject = (args, resolve) => {
+  const [sourceUrl, projectName] = args;
+
+  debugger;
+  // SHELL.exec(`git clone ${sourceUrl} ${projectName}`);
+  resolve();
 };
 
 const roadmap = [
-  [CONFIG_FILE],  getConfig,
-  [getConfig],    preparations,
-  // [readConfig],                 makeThings,
+  [CONFIG_FILE],                    getConfig,
+  [getConfig],                      preparations,
+  [preparations, SOURCE_URL, SOURCE_ALIAS], getSourceUrl,
+  [getSourceUrl, PROJECT_NAME],      cloneSourceProject,
 ];
-BRIEF(roadmap);
+TRIP(roadmap);
 
 
 /*

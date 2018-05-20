@@ -1,3 +1,5 @@
 {
-  "test": "res"
+  "sources": [
+    {"alias": "test", "url": "https://github.com/klimcode/base-cra"}
+  ]
 }
