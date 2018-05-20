@@ -2,5 +2,6 @@
   "sources": [],
   "firstForced": true,
   "clearHistory": true,
-  "gitUriBase": "https://github.com/klimcode/%repo%.git"
+  "gitUriTemplate": "https://github.com/__username__/%repo%.git",
+  "commands": []
 }
