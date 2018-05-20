@@ -1,5 +1,6 @@
 {
-  "sources": [
-    {"alias": "test", "url": "https://github.com/klimcode/base-cra"}
-  ]
+  "sources": [],
+  "firstForced": true,
+  "clearHistory": true,
+  "gitUriBase": "https://github.com/klimcode/%repo%.git"
 }

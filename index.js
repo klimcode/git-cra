@@ -5,7 +5,8 @@ const FILE = require('fs-handy-wraps');
 const SHELL = require('shelljs');
 const CLI = require('inquirer');
 const OPN = require('opn');
-const TRIP = require('brief-async');
+const CH = require('chalk');
+const RUN = require('brief-async');
 const { LOG, ERR } = require('./helpers');
 
 const { HOME, CWD } = FILE;
@@ -17,6 +18,7 @@ const PROJECT_NAME = ARGS[0] || '';
 const PROJECT_PATH = PATH.join(CWD, PROJECT_NAME);
 const SOURCE_URL = ARGS[1] || '';
 const SOURCE_ALIAS = ARGS[2] || '';
+let CONFIG;
 
 
 const getConfig = (args, resolve) => {
@@ -30,6 +32,7 @@ const getConfig = (args, resolve) => {
 };
 const preparations = (args, resolve) => {
   const [config] = args;
+  CONFIG = config; // Global variable mutation!
 
   // Test 1: is git installed?
   if (!SHELL.which('git')) {
@@ -53,7 +56,12 @@ const preparations = (args, resolve) => {
     }];
     CLI.prompt(questions).then((answers) => {
       if (answers.toClear) {
-        SHELL.rm('-rf', PROJECT_PATH);
+        const isRemoved = SHELL.rm('-rf', PROJECT_PATH);
+        if (isRemoved.code) {
+          ERR(`Can not remove ${PROJECT_PATH}. It's possibly locked`);
+          SHELL.exit(0);
+        }
+
         resolve(config);
       } else {
         SHELL.exit(0);
@@ -118,18 +126,71 @@ const getSourceUrl = (args, resolve) => {
 const cloneSourceProject = (args, resolve) => {
   const [sourceUrl, projectName] = args;
 
-  debugger;
-  // SHELL.exec(`git clone ${sourceUrl} ${projectName}`);
+
+  SHELL.exec(`git clone ${sourceUrl} ${projectName}`);
+  LOG('Source project is cloned');
+
+  SHELL.cd(`${projectName}`);
+
+  if (CONFIG.clearHistory) {
+    const isRemoved = SHELL.rm('-rf', '.git');
+    if (isRemoved.code) {
+      ERR(`Can not remove ${'.git'}. It's possibly locked`);
+      SHELL.exit(0);
+    }
+
+    SHELL.exec('git init');
+    SHELL.exec('git add .');
+    SHELL.exec('git commit -m "Initial commit"');
+    LOG('Commits history of the source project is cleared');
+  }
+
+  resolve(projectName);
+};
+const setNewGitOrigin = (args, resolve) => {
+  const [projectName] = args;
+
+  const setOrigin = (origin) => {
+    if (CONFIG.clearHistory) {
+      SHELL.exec(`git remote add origin ${origin}`);
+    } else {
+      SHELL.exec(`git remote set-url origin ${origin}`);
+    }
+
+    LOG('Next step is forced push of Initial commit to the New Project\'s repo');
+    SHELL.exec('git push -u --force origin master');
+    resolve();
+  };
+
+
+  if (CONFIG.gitUriBase) {
+    const originUriFromConfig = CONFIG.gitUriBase.replace('%repo%', projectName);
+    setOrigin(originUriFromConfig);
+  } else {
+    const questions = [{
+      message: `What is the Origin URI of ${projectName}?`,
+      type: 'input',
+      name: 'originUri',
+    }];
+    CLI.prompt(questions).then((answers) => {
+      LOG(CH`{blue Tip:} it's convenient to set up the "gitUriBase" in the Config file.`);
+      setOrigin(answers.originUri);
+    });
+  }
+};
+const replaceName = (args, resolve) => {
   resolve();
 };
 
 const roadmap = [
-  [CONFIG_FILE],                    getConfig,
-  [getConfig],                      preparations,
+  [CONFIG_FILE],                      getConfig,
+  [getConfig],                        preparations,
   [preparations, SOURCE_URL, SOURCE_ALIAS], getSourceUrl,
-  [getSourceUrl, PROJECT_NAME],      cloneSourceProject,
+  [getSourceUrl, PROJECT_NAME],       cloneSourceProject,
+  [cloneSourceProject, PROJECT_NAME], setNewGitOrigin,
+  [setNewGitOrigin],                  replaceName,
 ];
-TRIP(roadmap);
+RUN(roadmap);
 
 
 /*
