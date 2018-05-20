@@ -1,7 +1,11 @@
 {
   "name": "npfe",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "New Project From Existing git-repo",
+  "main": "index.js",
+  "bin": {
+    "npfe": "./index.js"
+  },
   "scripts": {},
   "dependencies": {
     "brief-async": "^0.5.0",

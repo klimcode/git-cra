@@ -1,14 +1,15 @@
 # New Project From Existing
 
-![this project is under construction](https://klimcode.github.io/base/construction.png)
-
 Clones a git-source to a specific directory and replaces all source-name occurencies by a name of the new Project.
 
 ## Installation
 
 ```bash
+# sometimes, sudo prefix is required
 npm i -g npfe
 ```
+
+.
 
 ## Usage examples
 
@@ -33,6 +34,8 @@ If source URI or Alias is not specified then the first memorized alias will be u
 npfe new-project
 ```
 
+.
+
 ## CLI
 
 ```bash
@@ -44,6 +47,8 @@ npfe <new-project-name> <URI | alias> <new-alias>
 If URI specified and it is not memorized yet then the `<new-alias>` argument will be used as an alias for the URI specified.
 If `<new-alias>` is not spesicied then a placeholder `source_#` will be used as an alias.
 
+.
+
 ## Configuration
 
 1. `sources` -- is a list of source repos
@@ -54,4 +59,4 @@ If `<new-alias>` is not spesicied then a placeholder `source_#` will be used as 
 
 ## package.json
 
-Additionally, all occurrences of the source project's name will be replaced by the new project's name in the `package.json` file.
+All occurrences of the source project's name will be replaced by the new project's name in the `package.json` file.
